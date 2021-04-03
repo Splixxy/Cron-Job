@@ -5,10 +5,9 @@ dt = datetime.datetime.now()
 monthAbrv = dt.strftime("%b %d")
 if re.match("0*",monthAbrv):
     monthAbrv = monthAbrv.replace("0", " ")
-    print(monthAbrv)
 fOpen = open("/var/log/secure","r")
 if monthAbrv in fOpen:
-    redFladFind = re.findall(monthAbrv,fOpen)
+    redFladFind = re.findall("%s*",fOpen % monthAbrv)
     redFlagFile = open("~/redflags.txt","a")
     redFlagFile.write(redFladFind)
     redFlagFile.close()
