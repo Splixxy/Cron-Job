@@ -1,17 +1,25 @@
-#cron job to run on start up
+#import required modules
 import os
 import datetime
 from inotify_simple import INotify, flags
 import re
+#runs this command to make this script keep running after it has been started
+os.system("while :; do python3 Monitor.py; done")
+#pulls in the datetime package
 dt = datetime.datetime.now()
+#gets strings of the monday and day without a space and month and day with a space.
 monthDay = (dt.strftime("%b%d"))
 monthDay = str(monthDay)
 monthAbrv = (dt.strftime("%b %d"))
 monthAbrv = str(monthAbrv)
+#removes the 0 from monthAbrv
 if re.match("0*",monthAbrv):
     monthAbrv = monthAbrv.replace("0", " ")
+#sets inotify
 inotify = INotify()
+#creates the watch flags
 watch_flags = flags.CREATE | flags.DELETE | flags.MODIFY | flags.DELETE_SELF
+#creates the watches with watch_flags
 wdDot = inotify.add_watch("/.", watch_flags)
 wdBashHisotry = inotify.add_watch(".bash_history", watch_flags)
 wdBashLogout = inotify.add_watch(".bash_logout", watch_flags)
@@ -27,13 +35,12 @@ wdMozilla = inotify.add_watch(".mozilla", watch_flags)
 wdPki = inotify.add_watch(".pki", watch_flags)
 wdViminfo = inotify.add_watch(".viminfo", watch_flags)
 wdWget = inotify.add_watch(".wget-hsts", watch_flags)
-
+#creates functions for each watch to log to
 def WD0():
     file = ("logs/Monitorlogs-%s.txt" % monthDay)
     fOpen = open(file,"r")
     fRead = fOpen.read()
-    print(fRead)
-    if "wd=0" in fRead:
+    if re.search("wd=1,",fRead):
         print(fRead)
         os.system("stat /. > logs/wdDotstat.txt")
         os.system("last > logs/wdDotlastlog.txt")
@@ -149,7 +156,7 @@ def WD14():
     if "wd=14" in fRead:
         os.system("stat .wget-hsts > logs/wdWgetstat.txt")
         os.system("last > logs/wdWgetlast.txt")
-
+#for events in inotify writes the event and then runs each functions to test for the watch event
 for event in inotify.read():
     file = ("logs/Monitorlogs-%s.txt" % monthDay)
     fOpen = open(file,"a")
@@ -170,6 +177,7 @@ for event in inotify.read():
     WD12()
     WD13()
     WD14()
+    #for the flags in event prints them into the same file with the events
     for flag in flags.from_mask(event.mask):
         fstring = str(("\n " + str(flag)))
         fOpen = open(file,"a")
